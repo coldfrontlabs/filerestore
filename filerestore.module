@@ -1,0 +1,145 @@
+<?php
+/**
+ * @file
+ * Code for the Blood Files feature.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function filerestore_menu() {
+  $items['admin/config/media/filerestore'] = array(
+    'title' => 'File Restore',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('filerestore_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'filerestore.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Scan for public files
+ *
+ * Some files may exist in Drupal's directories
+ * but aren't managed by Drupal. This function
+ * finds those files and reports on them.
+ *
+ * @return array
+ *  Returns an array of unmanaged files.
+ */
+function filerestore_find_public_files($managed = FALSE) {
+  $files = array();
+  $unmanaged = array();
+
+  // Only scan for files which can be uploaded to Drupal
+  $extensions = variable_get('file_entity_default_allowed_extensions', array());
+  $extensions = str_replace(' ', '|', $extensions);
+  $extensions = drupal_strtolower($extensions);
+  $extensions .= '|' . drupal_strtoupper($extensions);
+
+  // Scan the public files directory
+  $files = file_scan_directory('public://', '/^.*\.(' . $extensions . ')$/', array('nomask' => TRUE));
+
+  // Remove files from the 'styles' directory
+  foreach ($files as $file => $data) {
+    if (FALSE !== strpos($data->uri, 'public://styles')) {
+      unset($files[$file]);
+    }
+  }
+
+  if ($files and !$managed) {
+    // Trim files which exist in drupal's file db
+    foreach ($files as $file => $data) {
+      $fid = db_query('SELECT fid FROM {file_managed} WHERE uri = :uri', array(':uri' => $data->uri))->fetchField();
+      if (empty($fid)) {
+        $unmanaged[$file] = $data;
+      }
+    }
+    $files = $unmanaged;
+  }
+
+  return $files;
+}
+
+/**
+ * Import the list of files to the managed file system
+ */
+function filerestore_batch_manage_files($unmanaged = array()) {
+  if (empty($unmanaged)) {
+    $unmanaged = filerestore_find_public_files(FALSE);
+  }
+
+  $num_operations = count($unmanaged);
+  $operations = array();
+
+  foreach ($unmanaged as $file) {
+    $operations[] = array(
+      'filerestore_batch_manage_files_op',
+      array(
+        $file,
+        t('Importing file @uri', array('@uri' => $file->uri)),
+      ),
+    );
+  }
+
+  $batch = array(
+    'operations' => $operations,
+    'finished' => 'filerestore_batch_manage_files_finished',
+  );
+
+  return $batch;
+}
+
+/**
+ * Batch op for managing a file
+ */
+function filerestore_batch_manage_files_op($file, $op_details, &$context) {
+  foreach (filehash_algos() as $algo) {
+    $file->filehash[$algo] = hash_file($algo, $file->uri);
+  }
+
+  // If it matches, get the current path to the unmanaged file
+  $found = filehash_file_validate($file);
+  $duplicate = !empty($found);
+
+  if ($duplicate) {
+    // Skip
+  }
+  else {
+    // Set the author to admin
+    // @todo set the fid
+    //$file->uid = 1;
+    //file_save($file);
+
+    // Log the action
+    watchdog('filerestore', 'Imported file @path', array('@path' => $file->uri));
+  }
+
+  // Optional message displayed under the progressbar.
+  $context['message'] = t('Processing file @path', array('@path' => $file->uri));
+}
+
+/**
+ * Batch finished callback
+ */
+function filerestore_batch_manage_files_finished($success, $results, $operations) {
+  foreach ($results as $result) {
+    drupal_set_message($result);
+  }
+  if ($success) {
+    // Here we could do something meaningful with the results.
+    // We just display the number of nodes we processed...
+    drupal_set_message(t('Files have been imported.'));
+  }
+  else {
+    // An error occurred.
+    // $operations contains the operations that remained unprocessed.
+    $error_operation = reset($operations);
+    drupal_set_message(t('Some files failed to import. Please check the logs for details.', array(
+      '@operation' => $error_operation[0],
+      '@args' => print_r($error_operation[0], TRUE),
+    )));
+  }
+}
