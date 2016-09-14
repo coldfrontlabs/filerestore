@@ -101,10 +101,6 @@ function filerestore_batch_manage_files($unmanaged = array()) {
  * Batch op for managing a file
  */
 function filerestore_batch_manage_files_op($file, $op_details, &$context) {
-  if (!array_key_exists($context['sandbox']['count'])) {
-    $context['sandbox']['count'] = 0;
-  }
-
   // If it matches, get the current path to the unmanaged file
   $found = filerestore__file_validate($file);
   $duplicate = !empty($found);
