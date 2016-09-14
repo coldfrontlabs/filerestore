@@ -117,7 +117,7 @@ function filerestore_batch_manage_files_op($file, $op_details, &$context) {
   }
   else {
     // Check if it exists in training table
-    $results = db_select('filehash_training', 'ft')
+    $results = db_select('filehash_train', 'ft')
       ->fields('ft', array('fid'))
       ->condition('md5', $file->filehash['md5'], '=')
       ->execute();
