@@ -40,7 +40,7 @@ function filerestore_find_public_files($managed = FALSE) {
   $extensions .= '|' . drupal_strtoupper($extensions);
 
   // Scan the public files directory
-  $files = file_scan_directory('public://', '/^.*\.(' . $extensions . ')$/', array('nomask' => TRUE));
+  $files = file_scan_directory('public://', '/^.*\.(' . $extensions . ')$/', array('nomask' => FALSE));
 
   // Remove files from the 'styles' directory
   foreach ($files as $file => $data) {
