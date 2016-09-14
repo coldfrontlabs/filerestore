@@ -101,25 +101,39 @@ function filerestore_batch_manage_files($unmanaged = array()) {
  * Batch op for managing a file
  */
 function filerestore_batch_manage_files_op($file, $op_details, &$context) {
+  if (!array_key_exists($context['sandbox']['count'])) {
+    $context['sandbox']['count'] = 0;
+  }
+
   // If it matches, get the current path to the unmanaged file
   $found = filehash_file_validate($file);
   $duplicate = !empty($found);
+
+  // Optional message displayed under the progressbar.
+  $context['message'] = t('Processing file @path', array('@path' => $file->uri));
 
   if ($duplicate) {
     // Skip
   }
   else {
-    // Set the author to admin
-    // @todo set the fid
-    //$file->uid = 1;
-    //file_save($file);
+    // Check if it exists in training table
+    $results = db_select('filehash_training', 'ft')
+      ->fields('ft', array('fid'))
+      ->condition('md5', $file->filehash['md5'], '=')
+      ->execute();
+
+    if ($results->rowCount() > 0) {
+      $context['sandbox']['count']++;
+      // Set the author to admin
+      // @todo set the fid
+      //$file->uid = 1;
+      //file_save($file);
+      //$fid = $results->fetchCol('fid');
+    }
 
     // Log the action
-    watchdog('filerestore', 'Imported file @path', array('@path' => $file->uri));
+    watchdog('filerestore', 'Restored file @path', array('@path' => $file->uri));
   }
-
-  // Optional message displayed under the progressbar.
-  $context['message'] = t('Processing file @path', array('@path' => $file->uri));
 }
 
 /**
@@ -132,7 +146,7 @@ function filerestore_batch_manage_files_finished($success, $results, $operations
   if ($success) {
     // Here we could do something meaningful with the results.
     // We just display the number of nodes we processed...
-    drupal_set_message(t('Files have been imported.'));
+    drupal_set_message(t('Restored @count files.', array('@count' => $context['sandbox']['count'])));
   }
   else {
     // An error occurred.
