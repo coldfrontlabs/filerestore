@@ -10,8 +10,7 @@ function filerestore_admin_form($form, &$form_state) {
   $form['migrate_unmanaged_files'] = array(
     '#type' => 'button',
     '#name' => 'migrate_unmanaged_files',
-    '#value' => t('Migrate unmanaged files'),
-    '#description' => t('Scan Drupal\'s public files directory for files which are not tracked by Drupal and import them as proper file entities.'),
+    '#value' => t('Restore files'),
     '#executes_submit_callback' => TRUE,
   );
 
