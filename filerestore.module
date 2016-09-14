@@ -133,6 +133,7 @@ function filerestore_batch_manage_files_op($file, $op_details, &$context) {
         $file->fid = $fid_val;
         $file->uid = 1;
         filerestore__file_save($fid_val, $file);
+        filehash_save($file);
         $context['results'][] = 1;
         // Log the action
         watchdog('filerestore', 'Restored file @path', array('@path' => $file->uri));
