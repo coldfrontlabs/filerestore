@@ -106,7 +106,7 @@ function filerestore_batch_manage_files_op($file, $op_details, &$context) {
   }
 
   // If it matches, get the current path to the unmanaged file
-  $found = filehash_file_validate($file);
+  $found = filerestore__file_validate($file);
   $duplicate = !empty($found);
 
   // Optional message displayed under the progressbar.
@@ -191,4 +191,18 @@ function filerestore__file_save($fid, stdClass $file) {
   watchdog('filerestore', 'Writing @fid and go back @fid_save', array('@fid' => $fid, '@file_save' => $file->fid), WATCHDOG_DEBUG);
 
   return $file;
+}
+
+/**
+ * Validate duplicates
+ */
+function filerestore__file_validate($file) {
+  $errors = array();
+  foreach (filehash_algos() as $algo) {
+    if (db_query("SELECT COUNT(*) FROM {filehash} WHERE $algo = :hash", array(':hash' => hash_file($algo, $file->uri)))->fetchField()) {
+      $errors[] = t('Sorry, duplicate files are not permitted.');
+      break;
+    }
+  }
+  return $errors;
 }
