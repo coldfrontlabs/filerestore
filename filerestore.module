@@ -175,18 +175,19 @@ function filerestore__file_save($fid, stdClass $file) {
   $file->timestamp = REQUEST_TIME;
   $file->filesize = filesize($file->uri);
 
+  // Since hte files were deleted without triggering hooks
+  // we should insert them without hooks
   module_invoke_all('file_presave', $file);
   module_invoke_all('entity_presave', $file, 'file');
 
-  drupal_write_record('file_managed', $file);
-  // Inform modules about the newly added file.
-  module_invoke_all('file_insert', $file);
-  module_invoke_all('entity_insert', $file, 'file');
-
-  // Clear internal properties.
-  unset($file->original);
-  // Clear the static loading cache.
-  entity_get_controller('file')->resetCache(array($file->fid));
+  db_insert('file_managed')
+    ->fields(array(
+      'fid' => $fid,
+      'uid' => 1,
+      'filename' => $file->filename,
+      'uri' => $file->uri,
+    ))
+    ->execute();
 
   watchdog('filerestore', 'Writing @fid and go back @fid_save', array('@fid' => $fid, '@file_save' => $file->fid), WATCHDOG_DEBUG);
 
