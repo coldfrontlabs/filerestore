@@ -197,7 +197,7 @@ function filerestore__file_save($fid, stdClass $file) {
     ))
     ->execute();
 
-  watchdog('filerestore', 'Writing @fid and go back @fid_save', array('@fid' => $fid, '@file_save' => $file->fid), WATCHDOG_DEBUG);
+  watchdog('filerestore', 'Writing @fid and got back @fid_save', array('@fid' => $fid, '@file_save' => $file->fid), WATCHDOG_DEBUG);
 
   return $file;
 }
