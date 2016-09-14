@@ -147,7 +147,9 @@ function filerestore_batch_manage_files_finished($success, $results, $operations
   if ($success) {
     // Here we could do something meaningful with the results.
     // We just display the number of nodes we processed...
+    $files = filerestore_find_public_files();
     drupal_set_message(t('Restored @count files.', array('@count' => count($results))));
+    drupal_set_message(t('@count unmanaged files remain.', array('@count' => count($files))));
   }
   else {
     // An error occurred.
