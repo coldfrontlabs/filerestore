@@ -1,0 +1,4 @@
+name = File restore
+description = Restore files which were deleted by accident
+core = 7.x
+dependencies[] = filehash
