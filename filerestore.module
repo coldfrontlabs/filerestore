@@ -123,16 +123,17 @@ function filerestore_batch_manage_files_op($file, $op_details, &$context) {
       ->execute();
 
     if ($results->rowCount() > 0) {
-      $context['results'][] = 1;
-      // Set the author to admin
-      // @todo set the fid
-      //$file->uid = 1;
-      //file_save($file);
-      //$fid = $results->fetchCol('fid');
-    }
+      $fid_row = $results->fetchCol();
+      $fid_val = reset($fid_row);
 
-    // Log the action
-    watchdog('filerestore', 'Restored file @path', array('@path' => $file->uri));
+      // Set the author to admin
+      $file->fid = $fid_val;
+      $file->uid = 1;
+      filerestore__file_save($file);
+      $context['results'][] = 1;
+      // Log the action
+      watchdog('filerestore', 'Restored file @path', array('@path' => $file->uri));
+    }
   }
 }
 
@@ -146,7 +147,6 @@ function filerestore_batch_manage_files_finished($success, $results, $operations
   if ($success) {
     // Here we could do something meaningful with the results.
     // We just display the number of nodes we processed...
-    dpm($results);
     drupal_set_message(t('Restored @count files.', array('@count' => count($results))));
   }
   else {
@@ -158,4 +158,35 @@ function filerestore_batch_manage_files_finished($success, $results, $operations
       '@args' => print_r($error_operation[0], TRUE),
     )));
   }
+}
+
+/**
+ * Custom copy of file_save to allow fid to be set.
+ *
+ * @see file_save().
+ */
+function filerestore__file_save($fid, stdClass $file) {
+  // Ensure the passed fid value is the same.
+  if (!isset($file->fid) or $fid !== $file->fid) {
+    $file->fid = $fid;
+  }
+  $file->timestamp = REQUEST_TIME;
+  $file->filesize = filesize($file->uri);
+
+  module_invoke_all('file_presave', $file);
+  module_invoke_all('entity_presave', $file, 'file');
+
+  drupal_write_record('file_managed', $file);
+  // Inform modules about the newly added file.
+  module_invoke_all('file_insert', $file);
+  module_invoke_all('entity_insert', $file, 'file');
+
+  // Clear internal properties.
+  unset($file->original);
+  // Clear the static loading cache.
+  entity_get_controller('file')->resetCache(array($file->fid));
+
+  watchdog('filerestore', 'Writing @fid and go back @fid_save', array('@fid' => $fid, '@file_save' => $file->fid), WATCHDOG_DEBUG);
+
+  return $file;
 }
