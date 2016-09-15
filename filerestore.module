@@ -208,9 +208,13 @@ function filerestore__file_save($fid, stdClass $file) {
 
   $fields = array();
 
+  dpm($file);
+
   foreach ((array) $file as $field => $value) {
     $fields[$field] = $value;
   }
+
+  dpm($fields);
 
   db_insert('file_managed')
     ->fields($fields)
