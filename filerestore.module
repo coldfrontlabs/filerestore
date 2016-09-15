@@ -60,8 +60,9 @@ function filerestore_find_public_files($managed = FALSE) {
         $data->filemime = file_get_mimetype($data->uri);
 
         // Set the file entity type
-        $candidates = file_entity_get_filetype_candidates($data);
-        $data->type = reset($candidates);
+        $candidates = filerestore__file_entity_get_filetype_candidates($data);
+        $type = reset($candidates);
+        $data->type = drupal_strtolower($type);
 
         foreach (filehash_algos() as $algo) {
           $data->filehash[$algo] = hash_file($algo, $data->uri);
@@ -223,4 +224,26 @@ function filerestore__file_validate($file) {
     }
   }
   return $errors;
+}
+
+/**
+ * Get the candidate filetypes for a given file.
+ *
+ * Only filetypes for which the user has access to create entities are returned.
+ *
+ * @param array $file
+ *   An upload file array from form_state.
+ *
+ * @return array
+ *   An array of file type bundles that support the file's mime type.
+ */
+function filerestore__file_entity_get_filetype_candidates($file) {
+  $types = module_invoke_all('file_type', $file);
+  drupal_alter('file_type', $types, $file);
+  $candidates = array();
+  foreach ($types as $type) {
+    $file->type = $type;
+    $candidates[$type] = file_entity_type_get_name($file);
+  }
+  return $candidates;
 }
