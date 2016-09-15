@@ -208,15 +208,11 @@ function filerestore__file_save($fid, stdClass $file) {
 
   $fields = array();
 
-  dpm($file);
-
   foreach ((array) $file as $field => $value) {
     if (in_array($field, array('fid','uid', 'uri','filename','filemime','filesize','status','timestamp','uuid','type','created_timestamp','accessible_timestamp','accessible_uid','moderator_uid'))) {
       $fields[$field] = $value;
     }
   }
-
-  dpm($fields);
 
   db_insert('file_managed')
     ->fields($fields)
