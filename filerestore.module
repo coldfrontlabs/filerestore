@@ -211,7 +211,9 @@ function filerestore__file_save($fid, stdClass $file) {
   dpm($file);
 
   foreach ((array) $file as $field => $value) {
-    $fields[$field] = $value;
+    if (in_array($field, array('fid','uid', 'uri','filename','filemime','filesize','status','timestamp','uuid','type','created_timestamp','accessible_timestamp','accessible_uid','moderator_uid'))) {
+      $fields[$field] = $value;
+    }
   }
 
   dpm($fields);
