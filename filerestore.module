@@ -200,6 +200,8 @@ function filerestore__file_save($fid, stdClass $file) {
       'uid' => 1,
       'filename' => $file->filename,
       'uri' => $file->uri,
+      'filemime' => $file->filemime,
+      'type' => $file->type,
     ))
     ->execute();
 
