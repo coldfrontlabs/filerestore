@@ -207,20 +207,7 @@ function filerestore__file_save($fid, stdClass $file) {
   module_invoke_all('entity_presave', $file, 'file');
 
   db_insert('file_managed')
-    ->fields(array(
-      'fid' => $fid,
-      'uid' => $file->uid,
-      'filename' => $file->filename,
-      'uri' => $file->uri,
-      'filemime' => $file->filemime,
-      'type' => $file->type,
-      'timestamp' => $file->timestamp,
-      'uuid' => $file->uuid,
-      'created_timestamp' => $file->created_timestamp,
-      'accessible_timestamp' => $file->accessible_timestamp,
-      'accessible_uid' => $file->accessible_uid,
-      'moderator_uid' => $file->moderator_uid,
-    ))
+    ->fields((array) $file)
     ->execute();
 
   watchdog('filerestore', 'Writing @fid and got back @fid_save', array('@fid' => $fid, '@file_save' => $file->fid), WATCHDOG_DEBUG);
