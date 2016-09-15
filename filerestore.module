@@ -134,9 +134,23 @@ function filerestore_batch_manage_files_op($file, $op_details, &$context) {
 
       $check_file = file_load($fid_val);
       if (!isset($check_file->fid)) {
+
+        $metadata = db_select('file_managed_train', 'ft')
+          ->fields('ft')
+          ->condition('ft.fid', $fid_val, '=')
+          ->execute()
+          ->fetchAllAssoc('fid');
+
         // Set the author to admin
         $file->fid = $fid_val;
-        $file->uid = 1;
+        $file->uid = $metadata[$fid_val]['uid'];
+        $file->timestamp = $metadata[$fid_val]['timestamp'];
+        $file->uuid = $metadata[$fid_val]['uuid'];
+        $file->created_timestamp = $metadata[$fid_val]['created_timestamp'];
+        $file->accessible_timestamp = $metadata[$fid_val]['accessible_timestamp'];
+        $file->accessible_uid = $metadata[$fid_val]['accessible_uid'];
+        $file->moderator_uid = $metadata[$fid_val]['moderator_uid'];
+
         filerestore__file_save($fid_val, $file);
         filehash_save($file);
         $context['results'][] = t('File @path restored with fid @fid', array('@path' => $file->uri, '@fid' => $file->fid));
@@ -199,11 +213,17 @@ function filerestore__file_save($fid, stdClass $file) {
   db_insert('file_managed')
     ->fields(array(
       'fid' => $fid,
-      'uid' => 1,
+      'uid' => $file->uid,
       'filename' => $file->filename,
       'uri' => $file->uri,
       'filemime' => $file->filemime,
       'type' => $file->type,
+      'timestamp' => $file->timestamp,
+      'uuid' => $file->uuid,
+      'created_timestamp' => $file->created_timestamp,
+      'accessible_timestamp' => $file->accessible_timestamp,
+      'accessible_uid' => $file->accessible_uid,
+      'moderator_uid' => $file->moderator_uid,
     ))
     ->execute();
 
