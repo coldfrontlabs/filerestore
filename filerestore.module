@@ -142,7 +142,7 @@ function filerestore_batch_manage_files_op($file, $op_details, &$context) {
           ->fetchAllAssoc('fid');
 
         // Add the metadata.
-        foreach ((array)$metadata as $key => $value) {
+        foreach ((array)$metadata[$fid_val] as $key => $value) {
           $file->{$key} = $value;
         }
 
