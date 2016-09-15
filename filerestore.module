@@ -136,20 +136,15 @@ function filerestore_batch_manage_files_op($file, $op_details, &$context) {
       if (!isset($check_file->fid)) {
 
         $metadata = db_select('file_managed_train', 'ft')
-          ->fields('ft')
+          ->fields('ft', array('fid','uid','filename','filemime','filesize','status','timestamp','uuid','type','created_timestamp','accessible_timestamp','accessible_uid','moderator_uid'))
           ->condition('ft.fid', $fid_val, '=')
           ->execute()
           ->fetchAllAssoc('fid');
 
-        // Set the author to admin
-        $file->fid = $fid_val;
-        $file->uid = $metadata[$fid_val]['uid'];
-        $file->timestamp = $metadata[$fid_val]['timestamp'];
-        $file->uuid = $metadata[$fid_val]['uuid'];
-        $file->created_timestamp = $metadata[$fid_val]['created_timestamp'];
-        $file->accessible_timestamp = $metadata[$fid_val]['accessible_timestamp'];
-        $file->accessible_uid = $metadata[$fid_val]['accessible_uid'];
-        $file->moderator_uid = $metadata[$fid_val]['moderator_uid'];
+        // Add the metadata.
+        foreach ($metadata as $key => $value) {
+          $file->{$key} = $value;
+        }
 
         filerestore__file_save($fid_val, $file);
         filehash_save($file);
