@@ -55,6 +55,13 @@ function filerestore_find_public_files($managed = FALSE) {
       $fid = db_query('SELECT fid FROM {file_managed} WHERE uri = :uri', array(':uri' => $data->uri))->fetchField();
       if (empty($fid)) {
 
+        // Set the mimetype
+        $data->filemime = file_get_mimetype($data->uri);
+
+        // Set the file entity type
+        $candidates = file_entity_get_filetype_candidates($data);
+        $data->type = reset($candidates);
+
         foreach (filehash_algos() as $algo) {
           $data->filehash[$algo] = hash_file($algo, $data->uri);
         }
