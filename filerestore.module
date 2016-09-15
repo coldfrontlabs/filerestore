@@ -206,8 +206,14 @@ function filerestore__file_save($fid, stdClass $file) {
   module_invoke_all('file_presave', $file);
   module_invoke_all('entity_presave', $file, 'file');
 
+  $fields = array();
+
+  foreach ((array) $file as $field => $value) {
+    $fields[$field] = $value;
+  }
+
   db_insert('file_managed')
-    ->fields((array) $file)
+    ->fields($fields)
     ->execute();
 
   watchdog('filerestore', 'Writing @fid and got back @fid_save', array('@fid' => $fid, '@file_save' => $file->fid), WATCHDOG_DEBUG);
