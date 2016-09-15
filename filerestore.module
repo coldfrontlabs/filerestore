@@ -30,6 +30,7 @@ function filerestore_menu() {
  *  Returns an array of unmanaged files.
  */
 function filerestore_find_public_files($managed = FALSE) {
+  module_load_include('inc', 'file_entity', 'file_entity.pages');
   $files = array();
   $unmanaged = array();
 
