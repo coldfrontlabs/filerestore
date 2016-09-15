@@ -142,12 +142,13 @@ function filerestore_batch_manage_files_op($file, $op_details, &$context) {
           ->fetchAllAssoc('fid');
 
         // Add the metadata.
-        foreach ($metadata as $key => $value) {
+        foreach ((array)$metadata as $key => $value) {
           $file->{$key} = $value;
         }
 
         filerestore__file_save($fid_val, $file);
         filehash_save($file);
+
         $context['results'][] = t('File @path restored with fid @fid', array('@path' => $file->uri, '@fid' => $file->fid));
         // Log the action
         watchdog('filerestore', 'Restored file @path', array('@path' => $file->uri));
